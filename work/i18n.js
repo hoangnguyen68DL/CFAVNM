@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const $=id=>document.getElementById(id), key='cfa-email-reminder-preferences';
+const $=id=>document.getElementById(id), key='charter-interface-language';
 const en={
  'roadmap':'Roadmap','modules':'Modules & Topics','schedule':'Study Planner','mocks':'Mock Exams','analytics':'Study Analytics','review':'Spaced Review',
  'dailyGoalTitle':'Today’s goal','dailyGoalNext':'Study next module →','dailyGoalEdit':'Adjust','dailyPlanEdit':'Choose today’s modules',
@@ -25,9 +25,11 @@ const nav={today:language==='en'?'Today':'Hôm nay',modules:language==='en'?'Mod
  window.CharterSyncStatus?.render();
  window.MockRoomTopics?.localize();
  window.MockRoomAnalytics?.localize();
- try{const p=JSON.parse(localStorage.getItem(key)||'{}');p.language=language;localStorage.setItem(key,JSON.stringify(p))}catch{}
+ try{localStorage.setItem(key,language)}catch{}
+ window.dispatchEvent(new CustomEvent('charter-language-change',{detail:{language}}));
 }
-const select=$('emailLanguage');if(select){select.addEventListener('change',()=>apply(select.value));apply(select.value||'vi')}else{let p=null;try{p=JSON.parse(localStorage.getItem(key)||'{}')}catch{};apply(p?.language||'vi')}
+const select=$('interfaceLanguage');let savedLanguage='vi';try{savedLanguage=localStorage.getItem(key)==='en'?'en':'vi'}catch{}
+if(select){select.value=savedLanguage;select.addEventListener('change',()=>apply(select.value));apply(savedLanguage)}else apply(savedLanguage);
 addEventListener('charter-route',()=>{const lang=document.body.dataset.language||'vi';setTimeout(()=>apply(lang),80)});
 let i18nTimer=null,i18nBusy=false;const i18nObserver=new MutationObserver(()=>{if(i18nBusy)return;clearTimeout(i18nTimer);i18nTimer=setTimeout(()=>{i18nBusy=true;i18nObserver.disconnect();apply(document.body.dataset.language||'vi');i18nBusy=false;i18nObserver.observe(document.body,{childList:true,subtree:true})},120)});i18nObserver.observe(document.body,{childList:true,subtree:true});
 window.CharterI18n={apply};

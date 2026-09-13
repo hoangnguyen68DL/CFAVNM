@@ -13,20 +13,23 @@ const updateAvatar=()=>{const initial=(candidate.textContent.trim()[0]||'C').toU
 new MutationObserver(updateAvatar).observe(candidate,{childList:true,characterData:true,subtree:true});updateAvatar();
 const goalTimer=document.createElement('div');goalTimer.className='goal-session-clock';
 goalTimer.innerHTML='<div><span class="goal-session-label">PHIÊN HỌC HÔM NAY</span><strong id="goalSessionTime">00:00:00</strong><span id="goalSessionState">Sẵn sàng</span></div><button type="button" id="goalSessionToggle">Bắt đầu</button>';
+goalTimer.querySelectorAll('.goal-session-label,#goalSessionState,#goalSessionToggle').forEach(el=>el.setAttribute('translate','no'));
 goal.querySelector('.daily-goal-main').after(goalTimer);
 document.getElementById('goalSessionToggle').onclick=()=>document.getElementById('timerBtn').click();
 const updateSessionBefore=updateTimerDisplay;
 updateTimerDisplay=function(){
  updateSessionBefore();
- const time=document.getElementById('cpLiveSession').textContent,running=!!CharterPrep.getSession().since,elapsed=CharterPrep.sessionMs()>0;
+ const time=document.getElementById('cpLiveSession').textContent,running=!!CharterPrep.getSession().since,elapsed=CharterPrep.sessionMs()>0,en=document.body.dataset.language==='en';
  document.getElementById('goalSessionTime').textContent=time;
- document.getElementById('goalSessionState').textContent=running?'Đang học':elapsed?'Đã tạm dừng':'Sẵn sàng';
- document.getElementById('goalSessionToggle').textContent=running?'Ⅱ Tạm dừng':elapsed?'▶ Tiếp tục':'▶ Bắt đầu';
+ goalTimer.querySelector('.goal-session-label').textContent=en?'TODAY’S STUDY SESSION':'PHIÊN HỌC HÔM NAY';
+ document.getElementById('goalSessionState').textContent=running?(en?'Studying':'Đang học'):elapsed?(en?'Paused':'Đã tạm dừng'):(en?'Ready':'Sẵn sàng');
+ document.getElementById('goalSessionToggle').textContent=running?(en?'Ⅱ Pause':'Ⅱ Tạm dừng'):elapsed?(en?'▶ Continue':'▶ Tiếp tục'):(en?'▶ Start':'▶ Bắt đầu');
  goalTimer.classList.toggle('is-running',running);
  document.title=(running?'▶ '+time+' · ':elapsed?'Ⅱ '+time+' · ':'')+'CharterPrep';
 };
 addEventListener('focus',()=>updateTimerDisplay());
 document.addEventListener('visibilitychange',()=>updateTimerDisplay());
+addEventListener('charter-language-change',()=>updateTimerDisplay());
 updateTimerDisplay();
 const label=document.createElement('span');label.className='academy-edition';label.textContent='CHARTERPREP / STUDY ACADEMY';goal.prepend(label);
 const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)');let lastRoute='';
