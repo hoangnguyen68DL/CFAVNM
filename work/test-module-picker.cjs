@@ -1,0 +1,25 @@
+const fs=require('fs'),assert=require('assert/strict'),{JSDOM,VirtualConsole}=require('jsdom');
+const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>{if(!e.message.includes('Could not parse CSS'))errors.push(e)});
+const dom=new JSDOM(fs.readFileSync('dist/index.html','utf8'),{url:'https://picker.test',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.scrollTo=()=>{};w.IntersectionObserver=class{observe(){}disconnect(){}};w.HTMLElement.prototype.scrollIntoView=function(){};w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};w.TextEncoder=TextEncoder;w.fetch=async()=>{throw Error('Offline test')};w.localStorage.setItem('cfa-auth','1')}});
+const w=dom.window,d=w.document,wait=()=>new Promise(r=>setTimeout(r,180));
+(async()=>{
+ await wait();assert.equal(errors.length,0,errors[0]?.stack);
+ d.getElementById('dailyPlanEdit').click();await wait();
+ const select=d.getElementById('dailyPlanModules'),picker=select.nextElementSibling;
+ assert(!picker.closest('label'));assert(picker.children.length>2);
+ d.getElementById('dailyPlanAuto').click();assert.equal(picker.querySelectorAll(':checked').length,0);
+ const first=picker.children[0].querySelector('input');first.focus();first.click();
+ assert(first.checked);assert(select.options[0].selected);assert.equal(d.activeElement,first);
+ picker.children[1].querySelector('span').click();assert(select.options[1].selected);assert(first.checked);
+ first.click();assert(!first.checked);assert(!select.options[0].selected);assert(select.options[1].selected);
+ await wait();assert.equal(picker.querySelectorAll(':checked').length,1);
+ const selectedId=select.options[1].value;
+ d.querySelector('#dailyPlanForm button[type="submit"]').click();
+ assert.deepEqual(JSON.parse(w.localStorage.getItem('cfa-meta')).charterPrep.dailyModulePlan.ids,[selectedId]);
+ d.getElementById('dailyPlanEdit').click();await wait();assert.deepEqual([...select.selectedOptions].map(o=>o.value),[selectedId]);assert.equal(picker.querySelectorAll(':checked').length,1);
+ d.getElementById('dailyPlanAuto').click();assert.equal(select.selectedOptions.length,0);assert.equal(picker.querySelectorAll(':checked').length,0);
+ d.querySelector('#dailyPlanForm button[type="submit"]').click();assert.deepEqual(JSON.parse(w.localStorage.getItem('cfa-meta')).charterPrep.dailyModulePlan.ids,[]);
+ const email=d.getElementById('emailTomorrowModules'),emailPicker=email.nextElementSibling;
+ assert(!emailPicker.closest('label'));const input=emailPicker.querySelector('input'),was=input.checked;input.click();assert.equal(input.checked,!was);assert.equal(email.options[0].selected,!was);
+ assert.equal(errors.length,0,errors[0]?.stack);w.close();console.log('PASS: checkbox and text clicks, multi-selection, deselection, stable focus, translation refresh, save/reopen, automatic reset and email picker.');
+})().catch(e=>{console.error(e);w.close();process.exitCode=1});

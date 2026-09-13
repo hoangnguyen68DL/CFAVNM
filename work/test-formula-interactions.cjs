@@ -1,0 +1,18 @@
+const {JSDOM}=require('jsdom'),fs=require('fs'),assert=require('assert/strict');
+const d=new JSDOM('<section id="formula-cards"><div class="card"></div></section><div id="cpToast"></div>',{url:'https://test.invalid',runScripts:'outside-only'}),w=d.window;
+w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};
+const q=(title)=>({title,layout:'fraction',blank:2,formula:[title+' =','R_P − R_f','β_P'],choices:['β_P','\\frac{σ_M}{σ_P}'],answer:0});
+w.localStorage.setItem('charterprep.formulaLibrary.v2',JSON.stringify([{title:'Test',topic:'PM',items:[q('First'),q('Second')]}]));
+w.eval(fs.readFileSync(__dirname+'/formula-practice.js','utf8'));
+const el=id=>w.document.getElementById(id),choice=i=>el('formulaChoiceBank').querySelector('[data-c="'+i+'"]');
+w.document.querySelector('[data-start="0"]').click();
+assert(el('formulaNext').disabled);assert(el('formulaEquation').querySelector('sub'));assert(choice(1).querySelector('.fe-fraction'));
+choice(1).click();assert(el('fpFeedback').classList.contains('fp-wrong'));assert(el('formulaEquation').querySelector('.formula-blank .fe-fraction'));assert(choice(0).disabled);
+el('formulaNext').click();assert(!choice(0).disabled);assert(el('formulaNext').disabled);
+el('formulaEquation').querySelector('.formula-blank').ondrop({preventDefault(){},dataTransfer:{getData(){return '0'}}});
+assert(el('fpFeedback').classList.contains('fp-correct'));assert.equal(el('fpTrack').value,1);
+el('formulaNext').click();choice(0).click();el('formulaNext').click();assert(el('fpFeedback').textContent.includes('1/2'));
+el('fpMode').value='recognize';el('fpMode').dispatchEvent(new w.Event('change'));
+assert(!el('formulaEquation').querySelector('strong'));assert(!el('formulaEquation').querySelector('.formula-blank'));
+[...el('formulaChoiceBank').children].find(b=>b.textContent==='First').click();assert(el('fpFeedback').classList.contains('fp-correct'));
+w.close();console.log('PASS: fraction/subscripts, wrong answer, retry, drag/drop, progress, first-attempt score and recognition.');

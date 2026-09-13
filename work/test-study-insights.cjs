@@ -1,0 +1,24 @@
+const fs=require('fs'),assert=require('assert/strict'),{JSDOM,VirtualConsole}=require('jsdom');
+const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>{if(!e.message.includes('Could not parse CSS'))errors.push(e)});
+const dom=new JSDOM(fs.readFileSync('dist/index.html','utf8'),{url:'https://insights.test',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.scrollTo=()=>{};w.IntersectionObserver=class{observe(){}disconnect(){}};w.HTMLElement.prototype.scrollIntoView=function(){};w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};w.TextEncoder=TextEncoder;w.fetch=async()=>{throw Error('Offline test')};w.localStorage.setItem('cfa-auth','1')}});
+const w=dom.window,d=w.document;
+setTimeout(()=>{try{
+ assert.equal(errors.length,0,errors[0]?.stack);assert(d.querySelector('#goalInsights'));assert(d.querySelector('#insightAnalytics'));assert(d.querySelector('.resume-insight'));assert.equal(d.querySelectorAll('#ux-page-analytics .ux-analytics-grid>#insightAnalytics').length,1);assert.equal(d.querySelectorAll('#insightAnalytics>.insight-embedded').length,2);assert(d.querySelector('#insightAnalytics #heatmapGrid'));assert(d.querySelector('#insightAnalytics #milestoneGrid'));
+ assert(d.getElementById('paceAlertPreview'));w.PaceAlert.preview();assert(!d.getElementById('paceAlert').hidden);w.PaceAlert.check();assert(!d.getElementById('paceAlert').hidden);w.PaceAlert.hide(false);
+ assert.equal(w.StudyInsights.metrics().days,null);
+ w.eval(`progress={};meta.charterPrep.completedAt={};timeLog={};const testDate=CharterPrep.localDay();for(const m of MODULES.slice(0,14)){progress[m.id]=true;meta.charterPrep.completedAt[m.id]=new Date(testDate+'T10:00:00Z').toISOString()}timeLog[testDate]=120;`);
+ const m=w.StudyInsights.metrics();assert.equal(m.pace,1);assert.equal(m.done,14);assert.equal(m.days,m.total-14);assert.equal(m.thisMinutes,120);
+ w.eval(`meta.examDate=CharterPrep.localDay(new Date(Date.now()+70*86400000))`);const deadlinePace=w.StudyInsights.metrics();assert(deadlinePace.required>0&&deadlinePace.required<2);assert.equal(deadlinePace.deadlineDays,70);
+ w.location.hash='/today';w.eval(`meta.examDate=CharterPrep.localDay(new Date(Date.now()+2*86400000))`);const pace=w.PaceAlert.check(true);assert(pace.lateDays>0);assert(!d.getElementById('paceAlert').hidden);assert(d.getElementById('paceAlertText').textContent.includes('module/ngày'));d.getElementById('paceAlertLater').click();assert(d.getElementById('paceAlert').hidden);
+ w.eval(`meta.programStart=CharterPrep.localDay(new Date(Date.now()-86400000));meta.totalDays=30;meta.examDate='';meta.mockDate='';progress={};dayOverride=Object.fromEntries(MODULES.map((m,i)=>[m.id,i<4?1:30]));timeBlocks={};meta.charterPrep.planning={dailyMinutes:90,moduleMinutes:45};`);
+ const p=w.StudyLab.proposeCatchup();assert.equal(p.changes.length,4);for(const load of Object.values(p.load))if(load<100)assert(load<=90);
+ w.eval(`meta.charterPrep.planning={dailyMinutes:15,moduleMinutes:45}`);assert.equal(w.StudyLab.proposeCatchup().changes.length,0);
+ const n=d.getElementById('totalDaysInput');assert.equal(n.min,'1');assert.equal(n.max,'365');
+ w.eval(`dayOverride=Object.fromEntries(MODULES.map(m=>[m.id,1]));timeBlocks={}`);n.value='7';n.dispatchEvent(new w.Event('change'));assert.equal(w.eval('meta.totalDays'),7);
+ const backup=w.StudyLab.backupData();assert.doesNotThrow(()=>w.StudyLab.validateBackup(backup));
+ const plan=w.StudyInsights.proposePlan(3,'2026-10-01');assert.equal(plan.end,'2026-10-03');assert(Math.max(...Object.values(plan.overrides))<=3);
+ w.CurriculumManager.openEditor();d.getElementById('currName').value='New short-plan module';d.getElementById('currTopic').value='QUANT';d.getElementById('currDay').value='2';d.getElementById('currForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));assert.equal(d.getElementById('currError').textContent,'');assert(w.eval('MODULES.some(m=>m.name==="New short-plan module")'));
+ w.eval(`timeBlocks={1:[{id:'fixture',start:'09:00',end:'10:00',label:'Test',moduleIds:[]}]};openPlanner(1)`);d.getElementById('blockStart').value='09:30';d.getElementById('blockEnd').value='10:30';let alert='';w.alert=s=>alert=s;w.addBlock();assert(alert.includes('trùng'));assert.equal(w.eval('timeBlocks[1].length'),1);
+ d.getElementById('roadFresh').click();assert(d.getElementById('currConfirm').open);assert(w.eval('MODULES.length')>0);d.getElementById('currCancel').click();
+ assert.equal(errors.length,0,errors[0]?.stack);console.log('PASS: dashboard metrics, sparse-data forecast, capacity-aware catch-up, 7-day duration, backup validation, overlapping sessions and non-destructive curriculum preview.');
+ }catch(e){console.error(e);process.exitCode=1}finally{setTimeout(()=>w.close(),250)}},220);

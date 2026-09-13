@@ -1,0 +1,16 @@
+const fs=require('fs'),assert=require('assert/strict'),{JSDOM}=require('jsdom');
+const key='charterprep.mockLibrary.v2',questions=[{id:'q1',stem:'Question',topic:'FSA',options:[{label:'A',text:'One'},{label:'B',text:'Two'}],correctAnswer:'A'}];
+function boot(data){const w=new JSDOM('<section id="ux-page-mocks"></section>',{url:'https://reset.test',runScripts:'outside-only'}).window;w.confirm=()=>true;w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};w.localStorage.setItem(key,JSON.stringify(data));w.eval(fs.readFileSync('work/mock-results.js','utf8'));w.eval(fs.readFileSync('work/mock-room.js','utf8'));return w}
+const submitted={id:'mock',title:'Mock',type:'mock',questions,durationMinutes:10,status:'submitted',attempt:{answers:{0:0},seconds:500},history:[{score:0,total:1,at:'2026-09-01'},{score:1,total:1,at:'2026-09-02'}]};
+const practice={...submitted,id:'practice',title:'Practice',type:'practice'};
+let w=boot([submitted,practice]),d=w.document;const read=()=>JSON.parse(w.localStorage.getItem(key));
+const before=w.localStorage.getItem(key);w.confirm=()=>false;d.getElementById('mockResultsDelete').click();assert.equal(w.localStorage.getItem(key),before);
+w.confirm=()=>true;d.querySelector('[data-result-kind="mock"]').click();d.getElementById('mockResultsDelete').click();
+assert.equal(read()[0].history.length,1);assert.equal(read()[0].status,'todo');assert(!read()[0].attempt);assert.deepEqual(read()[0].questions,questions);assert.deepEqual(read()[1],practice);
+let saved=read();w.close();w=boot(saved);d=w.document;d.querySelector('[data-result-kind="mock"]').click();assert.equal(d.querySelectorAll('.mock-results-table tbody tr').length,1);d.getElementById('mockResultsClear').click();assert.equal(JSON.parse(w.localStorage.getItem(key))[0].history.length,0);assert.equal(JSON.parse(w.localStorage.getItem(key))[1].history.length,2);w.close();
+// Removing earlier results must preserve an unfinished attempt, including after reload.
+const progress={...submitted,status:'progress',attempt:{answers:{0:1},seconds:456,current:0,flags:[0]}};
+w=boot([progress]);d=w.document;d.getElementById('mockResultsClear').click();const clean=JSON.parse(w.localStorage.getItem(key))[0];assert.deepEqual(clean.attempt,progress.attempt);assert.equal(clean.status,'progress');assert.deepEqual(clean.questions,questions);assert.equal(clean.history.length,0);w.close();w=boot([clean]);assert(!w.document.querySelector('.mock-results-table'));w.close();
+// Stable legacy identifiers survive deleting an older row, then another row.
+w=boot([{...progress,history:[0,1,2].map(i=>({score:i%2,total:1,at:'2026-09-0'+(i+1)}))}]);d=w.document;d.querySelector('[data-result-select="2"]').click();d.getElementById('mockResultsDelete').click();let remaining=JSON.parse(w.localStorage.getItem(key))[0].history;assert.deepEqual(remaining.map(h=>h.id),['legacy-mock-1','legacy-mock-2']);d.getElementById('mockResultsDelete').click();remaining=JSON.parse(w.localStorage.getItem(key))[0].history;assert.equal(remaining.length,1);w.close();
+console.log('PASS: cancel, individual deletion, filtered reset, unrelated banks and questions preserved, unfinished answers retained, stable legacy IDs and no result resurrection on reload.');

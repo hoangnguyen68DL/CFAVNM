@@ -1,0 +1,15 @@
+const fs=require('node:fs');
+let s=fs.readFileSync('work/email-settings.js','utf8');
+const a=s.indexOf("const manage=document.createElement"),b=s.indexOf('let onlineEnabled=',a);
+s=s.slice(0,a)+s.slice(b);
+s=s.replace(" if(!manageInput.value.trim())throw Error('Nhập mã quản lý lịch trước khi lưu.');",'');
+s=s.replaceAll(",Authorization:'Bearer '+manageInput.value.trim()",'');
+s=s.replaceAll(",{headers:{Authorization:'Bearer '+manageInput.value.trim()}}",'');
+s=s.replace("if(response.status===401){showAccess();try{localStorage.removeItem('reminder-edit-key')}catch{}}",'');
+s=s.replaceAll('rememberAccess();','').replaceAll('showAccess();','');
+const c=s.indexOf("const loadSchedule=document.createElement"),d=s.indexOf('// Validate remembered access',c);
+s=s.slice(0,c)+s.slice(d);
+s=s.replace('if(manageInput.value&&location.protocol', 'if(location.protocol');
+s=s.replace('// Validate remembered access on reload without replacing edits made while loading.','// Load saved settings without replacing edits made while loading.');
+fs.writeFileSync('work/email-settings.js',s);
+fs.writeFileSync('work/email-online-fragment.js',s.slice(s.indexOf('let onlineEnabled='),s.lastIndexOf('})();')));

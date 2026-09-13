@@ -1,0 +1,17 @@
+const fs=require('node:fs');
+let t=fs.readFileSync('work/email-template.js','utf8').replace('window.CharterEmailTemplate=function(data)','export const CharterEmailTemplate=function(data)');
+t=t.replace('Tiến độ dựa trên dữ liệu được ghi nhận trong CharterPrep.', 'Tiến độ theo lần đồng bộ gần nhất từ web.');
+fs.mkdirSync('netlify/lib',{recursive:true});fs.writeFileSync('netlify/lib/email-template.mjs',t);
+for(const kind of ['morning','evening'])fs.writeFileSync('netlify/functions/'+kind+'-reminder.mjs',`import { run } from '../lib/reminder-runner.mjs';
+export const config={schedule:'* * * * *'};
+export default async()=>run('${kind}');
+`);
+let s=fs.readFileSync('work/email-settings.js','utf8');
+s=s.replace("if(!p.morning&&!p.evening)throw Error('Chọn ít nhất một loại nhắc học.');",'');
+const a=s.indexOf("$('emailSettingsForm').onsubmit="),b=s.indexOf('\n',a);
+s=s.slice(0,a)+`$('emailSettingsForm').onsubmit=async e=>{e.preventDefault();try{const p=validate(readForm());localStorage.setItem(key,JSON.stringify(p));saved=p;$('emailSettingsError').textContent='';$('emailSettingsStatus').textContent='Đã lưu trên thiết bị; email chưa được gửi.';await saveOnline(true)}catch(error){$('emailSettingsError').textContent=error.message}};`+s.slice(b);
+const marker="$('emailSendTest').onclick=sendTest;";
+const extra=fs.readFileSync('work/email-online-fragment.js','utf8');
+if(!s.includes('async function saveOnline'))s=s.replace(marker,marker+'\n'+extra);
+s=s.replace('Đã sẵn sàng kết nối Resend','Lịch nhắc học của bạn').replace('Lưu tuỳ chọn trước, sau đó bấm “Gửi thử email”. Khóa Resend chỉ nằm trên Netlify, không nằm trong trình duyệt.','Chọn giờ, ngày nhận và bài học ngày mai. Bấm Lưu để cập nhật lịch gửi tự động.');
+fs.writeFileSync('work/email-settings.js',s);

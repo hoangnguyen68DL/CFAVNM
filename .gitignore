@@ -1,0 +1,7 @@
+node_modules/
+work/node_modules/
+work/npm-cache/
+work/package/
+work/npm.tgz
+tmp/
+outputs/*
