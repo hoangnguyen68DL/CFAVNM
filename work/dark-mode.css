@@ -1,0 +1,43 @@
+/* Final dark-mode contrast pass. Keep controls readable above all design layers. */
+body.study-studio.academy-design.ux-dark{
+ --text:#f3f7fd;
+ --surface:#1c304a;
+ --dark-text:#f3f7fd;
+ --dark-muted:#b7c6da;
+ --dark-faint:#93a6c0;
+ --dark-control:#233a58;
+ --dark-control-border:#385374;
+ --dark-active:#4a82e8;
+ --dark-active-text:#fff;
+}
+body.study-studio.academy-design.ux-dark :is(.pomo-module select,.pomo-fields select){background:#1a2d46;color:var(--dark-text);border-color:var(--dark-control-border)}
+body.study-studio.academy-design.ux-dark .pomo-module{color:var(--dark-text)}
+body.study-studio.academy-design.ux-dark .pomo-module small{color:var(--dark-muted)}
+body.study-studio.academy-design.ux-dark :is(.lab-budget,.ux-module-filters,.lab-mistake-filter,.cp-tabs){background:#1d3049;border-color:#304966}
+body.study-studio.academy-design.ux-dark :is(.lab-budget,.ux-module-filters,.lab-mistake-filter,.cp-tabs) button{color:var(--dark-muted)}
+body.study-studio.academy-design.ux-dark :is(.lab-budget,.ux-module-filters,.lab-mistake-filter,.cp-tabs) button:hover{color:#fff;background:#2a4566}
+body.study-studio.academy-design.ux-dark :is(.lab-budget,.ux-module-filters,.lab-mistake-filter,.cp-tabs) button[aria-pressed=true]{background:var(--dark-active);color:var(--dark-active-text);border-color:var(--dark-active);box-shadow:none}
+body.study-studio.academy-design.ux-dark .btn:not(.ghost):not(:disabled){background:#326dcc;border-color:#326dcc;color:#fff}
+body.study-studio.academy-design.ux-dark .btn:not(.ghost):not(:disabled):hover{background:#477fdf;border-color:#477fdf;color:#fff}
+body.study-studio.academy-design.ux-dark .btn.ghost{background:var(--dark-control);border-color:var(--dark-control-border);color:#dce8f8}
+body.study-studio.academy-design.ux-dark .btn.ghost:hover{background:#2d4a6e;color:#fff}
+body.study-studio.academy-design.ux-dark .insight-panel{background:#152741;color:var(--dark-text);border-color:#304660}
+body.study-studio.academy-design.ux-dark .insight-heading h2,
+body.study-studio.academy-design.ux-dark .insight-chart-title h3,
+body.study-studio.academy-design.ux-dark .insight-metrics strong{color:var(--dark-text)}
+body.study-studio.academy-design.ux-dark :is(.insight-heading p,.insight-note,.insight-metrics small,.insight-metrics span,.insight-chart-title>span,.insight-day>span){color:var(--dark-muted)}
+body.study-studio.academy-design.ux-dark .insight-eyebrow,
+body.study-studio.academy-design.ux-dark .insight-section-label{color:#78a7ff!important}
+body.study-studio.academy-design.ux-dark .insight-pill{background:#243e61;color:#b9d3ff}
+body.study-studio.academy-design.ux-dark .insight-progress{background:conic-gradient(#5b91ee var(--progress),#293e59 0)}
+body.study-studio.academy-design.ux-dark .insight-progress:before{background:#152741}
+body.study-studio.academy-design.ux-dark .insight-progress strong{color:#f5f8fd}
+body.study-studio.academy-design.ux-dark .insight-progress span{color:#b5c5da}
+body.study-studio.academy-design.ux-dark .insight-metrics article{background:#1d314b;border-color:#304861}
+body.study-studio.academy-design.ux-dark .insight-metrics article:first-child{background:#203b5e;border-color:#37608d}
+body.study-studio.academy-design.ux-dark .insight-chart-card{border-color:#304861}
+body.study-studio.academy-design.ux-dark .insight-columns{border-color:#304861}
+body.study-studio.academy-design.ux-dark .insight-alert{background:#3a321f;border-color:#6b5830;color:#f0d99f}
+body.study-studio.academy-design.ux-dark .lab-section-title{color:var(--dark-text)}
+body.study-studio.academy-design.ux-dark .lab-mistake-filter+*{color:var(--dark-text)}
+body.study-studio.academy-design.ux-dark select option{background:#172a43;color:#f1f6fd}

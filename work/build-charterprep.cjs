@@ -71,7 +71,7 @@ html=html.replace("localStorage.setItem('cfa-timelog', JSON.stringify(timeLog));
 html=html.replaceAll('data.meta.totalDays<25','data.meta.totalDays<1');
 html=html.replace("newDays.max='90';newDays.min='25'","newDays.max='365';newDays.min='1'");
 html=html.replace('n<25||n>90','n<1||n>365').replace('Lộ trình cần từ 25 đến 90 ngày.','Lộ trình cần từ 1 đến 365 ngày.').replaceAll('25–90','1–365').replaceAll('min="25"','min="1"');
-html=html.replace('</head>','<style>'+fs.readFileSync(base+'/work/study-insights.css','utf8')+fs.readFileSync(base+'/work/pomodoro-controls.css','utf8')+fs.readFileSync(base+'/work/pace-alert.css','utf8')+'</style></head>');
+html=html.replace('</head>','<style>'+fs.readFileSync(base+'/work/study-insights.css','utf8')+fs.readFileSync(base+'/work/pomodoro-controls.css','utf8')+fs.readFileSync(base+'/work/pace-alert.css','utf8')+fs.readFileSync(base+'/work/dark-mode.css','utf8')+'</style></head>');
 const insightsEnd=html.lastIndexOf('</body>');html=html.slice(0,insightsEnd)+'<script>'+fs.readFileSync(base+'/work/study-insights.js','utf8')+'</script><script>'+fs.readFileSync(base+'/work/pace-alert.js','utf8')+'</script>'+html.slice(insightsEnd);
 for(const [i,s]of [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].entries())new vm.Script(s[1],{filename:'inline-'+i+'.js'});
 fs.mkdirSync(base+'/dist',{recursive:true});
